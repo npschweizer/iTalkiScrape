@@ -1,5 +1,7 @@
 from selenium import webdriver
 
+from datetime import date
+
 from selenium.webdriver.support.ui import WebDriverWait
 
 from selenium.webdriver.common.keys import Keys
@@ -38,33 +40,55 @@ def waiting_func(by_variable, attribute):
 
 
 
-# tag for teacher results <p class="teachers-result" id="found-teacher-count"><span><strong>4778</strong> teachers found</span></p>
-#<button type="button" class="teacher-card-more-menu-btn btn btn-standard btn-default"><span>Message this teacher</span></button>
+
+
+csv_file = open('secondurls.csv' + str(date.today()) + '.csv', 'w', encoding='utf-8', newline='')
+writer = csv.writer(csv_file)
+pageUrl = ''
+teacher_dict = {}
+
+
+#Apply teacher home country
+#<label class="filter-checkbox ant-checkbox-wrapper"><span class="ant-checkbox"><input type="checkbox" class="ant-checkbox-input" value=""><span class="ant-checkbox-inner"></span></span><span><span>United States</span></span></label>
+countryButtons = driver.find_elements_by_xpath('//span[@class="ant-checkbox"]')
+print(countryButtons)
 time.sleep(2)
 filterButton = driver.find_element_by_xpath('//div[@class="tag-filter"]')
 filterButton.click()
 time.sleep(4)
-boxButton = driver.find_element_by_xpath('//input[@class="ant-checkbox-input"]')
+#boxButton = countryButtons[0]
+boxButton = driver.find_element_by_xpath('//input[@class="ant-checkbox-input"]'[1])
 boxButton.click()
 applyButton = driver.find_element_by_xpath('//button[@class="ant-btn filter-apply-btn ant-btn-primary ant-btn-sm"]')
 applyButton.click()
+time.sleep(5)
 
-csv_file = open('urls.csv', 'w', encoding='utf-8', newline='')
-writer = csv.writer(csv_file)
-pageUrl = ''
-teacher_dict = {}
 counter = 0
 while True:
-    #counter += 1
-    #if counter > 3:
-     #   break
+    counter += 1
+    if counter > 3:
+        print('working')
+        for x in range(1, int(driver.find_element_by_xpath('//p[@class="teachers-result"]/span/strong').text)):
+            x_str = str(x)
+            teacherButton = driver.find_element_by_xpath(f'''//div[@id="found-teacher-{x_str}"]''')
+            teacherButton.click()
+            handles = driver.window_handles 
+            driver.switch_to.window(handles[1])
+            pageUrl = driver.current_url
+            driver.close()
+            driver.switch_to.window(handles[0])
+            teacher_dict['pageUrl'] = pageUrl
+            writer.writerow(teacher_dict.values())
+        break
+
     try:
         waiting_func('xpath', '//button[@class="teachers-more btn btn-standard btn-ghost-default"]')
         button = driver.find_element_by_xpath('//button[@class="teachers-more btn btn-standard btn-ghost-default"]')
         button.click()
-        time.sleep(2)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
-        time.sleep(3)
+        
+        #time.sleep(5)
+        #driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+        #time.sleep(5)
     except NoSuchElementException:  
         print('working')
         for x in range(1, int(driver.find_element_by_xpath('//p[@class="teachers-result"]/span/strong').text)):
